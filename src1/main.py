@@ -57,7 +57,7 @@ def remove_brackets(sentence):
     sentence = sentence.replace(sub_string, '', 1)
     return sentence
 
-
+TODO prepend label to sample. push all into same file
 def parse_data():
     print("parsing raw data:")
     row_len = MINIMUM_ROW_LENGTH
@@ -118,7 +118,7 @@ def get_data(train_test_split):
     print("test set size is {}".format(len(test_x)))
     return train_x, train_y, test_x, test_y
 
-
+TODO - delete
 def build_feature_vector(func_words, data_x):
     all_f_vecs = []
     for sample in data_x:
@@ -145,6 +145,7 @@ def build_feature_vector2(func_words, data_x):
     for sample in data_x:
         f_vec = [0] * len(func_words)
         count = 0
+		TODO - separate cases - if func_word == 1 go over sample. if bigger then do find
         for func_word in func_words:
             # TODO replace with regex - no [a-z] before and after the word
             a = sample.find(func_word)
@@ -187,6 +188,9 @@ def main():
     # clf.fit(X, y)
     # print(clf.predict([[5], [-1], [3], [2], [0], [-2]]))
 
+	
+	TODO - look over lilah hw5 and see how to fiddle the svm params
+	TODO - change to RBF
     clf = SVC()
     clf.fit(train_x_fv, train_y)
     score = clf.score(test_x_fv, test_y)
