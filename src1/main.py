@@ -149,7 +149,6 @@ def build_feature_vector(func_words, data_x, debug_name):
     for sample in data_x:
         f_vec = [0] * len(func_words)
         iter_num = 0
-        # TODO - separate cases - if func_word == 1 go over sample. if bigger then do find
         for func_word in func_words:
             if len(func_word.split()) > 1:  # func_word is a phrase
                 func_word_split = func_word.split()
@@ -226,6 +225,18 @@ def run_example():
     return
 
 
+def output_all_args(duration):
+    print("PARAMETERS summary:")
+    print("MINIMUM_ROW_LENGTH".format(MINIMUM_ROW_LENGTH))
+    print("RANDOMIZE_DATA".format(RANDOMIZE_DATA))
+    print("DATA_SET_SIZE".format(DATA_SET_SIZE))
+    print("TRAIN_TEST_SPLIT".format(TRAIN_TEST_SPLIT))
+    hours, rem = divmod(duration, 3600)
+    minutes, seconds = divmod(rem, 60)
+    print("duration(formatted HH:MM:SS): {:0>2}:{:0>2}:{:0>2}".format(int(hours), int(minutes), int(seconds)))
+    return
+
+
 def main():
     start_time = time()
 
@@ -234,11 +245,7 @@ def main():
 
     run_svm(train_x_svm_ready, train_y_svm_ready, test_x_svm_ready, test_y_svm_ready)
     # run_example()
-
-    duration = time() - start_time
-    hours, rem = divmod(duration, 3600)
-    minutes, seconds = divmod(rem, 60)
-    print("duration(formatted HH:MM:SS): {:0>2}:{:0>2}:{:0>2}".format(int(hours), int(minutes), int(seconds)))
+    output_all_args(time() - start_time)
 
 
 if __name__ == "__main__":
