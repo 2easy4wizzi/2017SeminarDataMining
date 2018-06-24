@@ -12,7 +12,7 @@ NATIVE_RAW_FOLDER_NAME = "native/"
 RAW_DATA_SIZE_FOR_EACH_CLASS = 1000000
 CLASS_NATIVE_LABEL = "native"
 CLASS_NON_NATIVE_LABEL = "non-native"
-MINIMUM_ROW_LENGTH = 10
+MINIMUM_ROW_LENGTH = 10  # TODO - length by chars not words
 
 PARSED_DATA_FULL_PATH = "../parsedData/alldata.txt"
 FUNCTION_WORDS_FILE = "../parsedData/functionWords.txt"
