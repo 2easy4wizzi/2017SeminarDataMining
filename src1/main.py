@@ -6,152 +6,156 @@ from sklearn.svm import SVC
 import matplotlib.pyplot as plt
 import random
 
-
 RAW_DATA_PATH = "../rawData/reddit/"
 NON_NATIVE_RAW_FOLDER_NAME = "non-native/"
 NATIVE_RAW_FOLDER_NAME = "native/"
-TRAIN_DATA_SIZE_FOR_EACH_CLASS = 10000
-MINIMUM_ROW_LENGTH = 7
+RAW_DATA_SIZE_FOR_EACH_CLASS = 1000000
+CLASS_NATIVE_LABEL = "native"
+CLASS_NON_NATIVE_LABEL = "non-native"
+MINIMUM_ROW_LENGTH = 10
 
-PARSED_DATA_PATH = "../parsedData/data/"
+PARSED_DATA_FULL_PATH = "../parsedData/alldata.txt"
 FUNCTION_WORDS_FILE = "../parsedData/functionWords.txt"
-NON_NATIVE_FILENAME = "non-native.txt"
-NATIVE_FILENAME = "native.txt"
+RANDOMIZE_DATA = False  # will alter the train-test samples
+DATA_SET_SIZE = 5000
+CLASS_NATIVE_VALUE = 1
+CLASS_NON_NATIVE_VALUE = -1
 TRAIN_TEST_SPLIT = 0.8
 
 
-def create_parsed_file(base_path, files, dst_file_name, dst_file_size, sentence_length):
-    global_sentence_array = []
-    line_from_each_file = math.floor(dst_file_size/len(files))
-    print("line_from_each_file: {} / {}  ={}".format(dst_file_size, len(files), line_from_each_file))
-    for cur_file in files:
-        print("cur_file= {}".format(cur_file))
-        f = open(base_path + cur_file, 'r', encoding="utf8")
-        sentence_array = []
-        for line in f:
-            line = remove_brackets(line)
-            line = line.strip()
-            if len(line) >= sentence_length:
-                sentence_array.append(line.lower())
-
-        np.random.shuffle(sentence_array)
-
-        global_sentence_array += sentence_array[:line_from_each_file]
-        print("sentence_array size {}".format(len(sentence_array)))
-        print("global_sentence_array size {}".format(len(global_sentence_array)))
-        if len(global_sentence_array) >= 1500:  # TODO delete
-            break
-
-    # dump array to file
-    dst_file = open(dst_file_name, 'w+', encoding="utf8")
-    for line in global_sentence_array:
-        dst_file.write(line + '\n')
-
-    print("file {} with {} lines was created".format(dst_file_name, len(global_sentence_array)))
-
-
-def remove_brackets(sentence):
-    sub_string = sentence[sentence.find('['):sentence.find(']')+1]
-    sentence = sentence.replace(sub_string, '', 1)
-    sub_string = sentence[sentence.find('['):sentence.find(']')+1]
-    sentence = sentence.replace(sub_string, '', 1)
-    return sentence
-
-TODO prepend label to sample. push all into same file
-def parse_data():
-    print("parsing raw data:")
-    row_len = MINIMUM_ROW_LENGTH
-    samples_size = TRAIN_DATA_SIZE_FOR_EACH_CLASS
-
-    base_path = RAW_DATA_PATH + NATIVE_RAW_FOLDER_NAME
-    native_file_names = os.listdir(base_path)
-    create_parsed_file(base_path, native_file_names, PARSED_DATA_PATH + NATIVE_FILENAME, samples_size, row_len)
-
-    base_path = RAW_DATA_PATH + NON_NATIVE_RAW_FOLDER_NAME
-    non_native_file_names = os.listdir(RAW_DATA_PATH + NON_NATIVE_RAW_FOLDER_NAME)
-    create_parsed_file(base_path, non_native_file_names, PARSED_DATA_PATH + NON_NATIVE_FILENAME, samples_size, row_len)
-
-
-def maybe_parse_data():
-    if not os.path.exists(PARSED_DATA_PATH):
-        print("data does not exists")
-        os.makedirs(PARSED_DATA_PATH)
-        parse_data()
-    else:
-        print("data exists")
-
-
-def read_file_to_list(file, name):
+def read_raw_file_to_list(file, max_rows, label):
     my_list = []
     f = open(file, 'r', encoding="utf8")
     for line in f:
+        if 0 < max_rows <= len(my_list):  # -1: read all file
+            break
+        sub_string = line[line.find('['):line.find(']') + 1]
+        line = line.replace(sub_string, '', 1)
+        sub_string = line[line.find('['):line.find(']') + 1]
+        line = line.replace(sub_string, '', 1)
+        line = line.strip()
+        if len(line) >= MINIMUM_ROW_LENGTH and line not in my_list:
+            line = ("[" + label + "] " + line)
+            my_list.append(line.lower())
+    return my_list
+
+
+def parse_class(label, base_path, file_names):
+    size = RAW_DATA_SIZE_FOR_EACH_CLASS
+    line_from_each_file = math.floor(size / len(file_names))
+    msg = "    There are {} {} files. Total size of samples: floor({}*{})={}"
+    print(msg.format(label, len(file_names), size, len(file_names), line_from_each_file))
+    all_rows_raw = []
+    debug_files_names = ""
+    for file in file_names:
+        local_list = read_raw_file_to_list(base_path + file, line_from_each_file, label)
+        all_rows_raw += local_list
+        debug_files_names += (file + " ")
+    print("    {} files parsed: {}".format(label, debug_files_names))
+    return all_rows_raw
+
+
+def maybe_parse_data():
+    if not os.path.exists(PARSED_DATA_FULL_PATH):
+        print("Need to parse raw data")
+        print("    Parsing raw data...")
+        base_path = RAW_DATA_PATH + NATIVE_RAW_FOLDER_NAME
+        native_file_names = os.listdir(base_path)
+        native_data = parse_class(CLASS_NATIVE_LABEL, base_path, native_file_names)
+
+        base_path = RAW_DATA_PATH + NON_NATIVE_RAW_FOLDER_NAME
+        non_native_file_names = os.listdir(base_path)
+        non_native_data = parse_class(CLASS_NON_NATIVE_LABEL, base_path, non_native_file_names)
+
+        all_semi_raw_data = native_data + non_native_data
+        np.random.shuffle(all_semi_raw_data)
+        print("    all_data size is {}".format(len(all_semi_raw_data)))
+        print("    saving to file: {}".format(PARSED_DATA_FULL_PATH))
+        dst_file = open(PARSED_DATA_FULL_PATH, 'w+', encoding="utf8")
+        for line in all_semi_raw_data:
+            dst_file.write(line + '\n')
+
+        print("    file {} with {} lines was created".format(PARSED_DATA_FULL_PATH, len(all_semi_raw_data)))
+        print("    Finished Parsing raw data")
+    else:
+        print("Parsed data exists")
+    return
+
+
+def read_file_to_list(file, max_rows):
+    my_list = []
+    f = open(file, 'r', encoding="utf8")
+    for line in f:
+        if 0 < max_rows <= len(my_list):  # -1: read all file
+            break
         line = line.strip()
         if line not in my_list:
-            my_list.append(line)
-
-    print("{} len is {}".format(name, len(my_list)))
+            my_list.append(line.lower())
+    print("    Reading file({} lines) {}".format(len(my_list), file))
     return my_list
 
 
 def get_data(train_test_split):
+    all_rows = read_file_to_list(PARSED_DATA_FULL_PATH, DATA_SET_SIZE)
+    if RANDOMIZE_DATA:
+        np.random.shuffle(all_rows)  # will affect the train test split
+    count_nat = 0
+    count_non_nat = 0
+    all_data_x = []
+    all_data_y = []
+    for row in all_rows:
+        if row.startswith("[" + CLASS_NATIVE_LABEL):
+            all_data_y.append(CLASS_NATIVE_LABEL)
+            count_nat += 1
+        elif row.startswith("[" + CLASS_NON_NATIVE_LABEL):
+            all_data_y.append(CLASS_NON_NATIVE_LABEL)
+            count_non_nat += 1
+        sub_string = row[row.find('['):row.find(']') + 1]
+        row = row.replace(sub_string, '', 1)
+        row = row.strip()
+        all_data_x.append(row)
+    print("    There are {} Native samples and {} Non-Native".format(count_nat, count_non_nat))
+    split_ind = math.floor(len(all_data_y) * train_test_split)
 
-    data_x_native = read_file_to_list(PARSED_DATA_PATH + NATIVE_FILENAME, "data_x_native")
-    data_y_native = [1] * len(data_x_native)
-    data_x_non_native = read_file_to_list(PARSED_DATA_PATH + NON_NATIVE_FILENAME, "data_x_non_native")
-    data_y_non_native = [2] * len(data_x_non_native)
-
-    all_data_x = data_x_native + data_x_non_native
-    all_data_y = data_y_native + data_y_non_native
-
-    c = list(zip(all_data_x, all_data_y))
-    random.shuffle(c)
-    temp_x_2, temp_y_2 = zip(*c)
-    all_data_x = temp_x_2
-    all_data_y = temp_y_2
-
-    split_ind = math.floor(len(all_data_x) * train_test_split)
     train_x = all_data_x[:split_ind]
     train_y = all_data_y[:split_ind]
-    test_x = all_data_x[split_ind:-1]
-    test_y = all_data_y[:split_ind:-1]
-    print("train set size is {}".format(len(train_x)))
-    print("test set size is {}".format(len(test_x)))
+
+    test_x = all_data_x[split_ind:]
+    test_y = all_data_y[split_ind:]
+
+    count_nat = 0
+    count_non_nat = 0
+    for i in range(len(train_y)):
+        if train_y[i] == CLASS_NATIVE_LABEL:
+            count_nat += 1
+        elif train_y[i] == CLASS_NON_NATIVE_LABEL:
+            count_non_nat += 1
+
+    print("    Train set size {} - native={}, non-native={}".format(len(train_y), count_nat, count_non_nat))
+
+    count_nat = 0
+    count_non_nat = 0
+    for i in range(len(test_y)):
+        if test_y[i] == CLASS_NATIVE_LABEL:
+            count_nat += 1
+        elif test_y[i] == CLASS_NON_NATIVE_LABEL:
+            count_non_nat += 1
+    print("    Test  set size {} - native={}, non-native={}".format(len(test_y), count_nat, count_non_nat))
     return train_x, train_y, test_x, test_y
 
-TODO - delete
-def build_feature_vector(func_words, data_x):
-    all_f_vecs = []
-    for sample in data_x:
-        f_vec = dict.fromkeys(func_words, 0)
-        # print("{}) {}".format( sample))
-        for func_word in f_vec.keys():
-            # TODO replace with regex - no [a-z] before and after the word
-            a = sample.find(func_word)
-            if a != -1:
-                # checking that the func word is not contained in another word (ex: the 'a' is not part of 'gilad')
-                pre = a > 0 and not sample[a-1].isalpha()  # checking before the word there isn't another char
-                post = a + len(func_word) < len(sample) and not sample[a + len(func_word)].isalpha()  # checking after
-                if pre and post:
-                    f_vec[func_word] += 1
-        all_f_vecs.append(f_vec)
 
-    print("all_f_vecs size is {}".format(len(all_f_vecs)))
-    return all_f_vecs
-
-
-def build_feature_vector2(func_words, data_x):
+def build_feature_vector(func_words, data_x, debug_name):
     all_f_vecs = []
     iters = 0
     for sample in data_x:
         f_vec = [0] * len(func_words)
         count = 0
-		TODO - separate cases - if func_word == 1 go over sample. if bigger then do find
+        # TODO - separate cases - if func_word == 1 go over sample. if bigger then do find
         for func_word in func_words:
-            # TODO replace with regex - no [a-z] before and after the word
             a = sample.find(func_word)
             if a != -1:
                 # checking that the func word is not contained in another word (ex: the 'a' is not part of 'gilad')
-                pre = a > 0 and not sample[a-1].isalpha()  # checking before the word there isn't another char
+                pre = a > 0 and not sample[a - 1].isalpha()  # checking before the word there isn't another char
                 post = a + len(func_word) < len(sample) and not sample[a + len(func_word)].isalpha()  # checking after
                 if pre and post:
                     f_vec[count] += 1
@@ -159,55 +163,80 @@ def build_feature_vector2(func_words, data_x):
         iters += 1
         all_f_vecs.append(f_vec)
 
-    print("all_f_vecs size is {}".format(len(all_f_vecs)))
+    print("    {} data 'all feature vector' size is {}x{}".format(debug_name, len(all_f_vecs[0]), len(all_f_vecs)))
     return all_f_vecs
 
 
-def print_graph(x, title, xlabel, ylabel, func_a_data, func_b_data):
-    plt.subplot(x)
-    plt.title(title)
-    plt.xlabel(xlabel)
-    plt.ylabel(ylabel)
-    plt.plot(func_a_data, 'r')
-    plt.plot(func_b_data, 'g')
+def enumerate_labels(data_y, debug_name):
+    new_data_y = data_y[:]
+    for i in range(len(new_data_y)):
+        if new_data_y[i] == CLASS_NATIVE_LABEL:
+            new_data_y[i] = CLASS_NATIVE_VALUE
+        elif new_data_y[i] == CLASS_NON_NATIVE_LABEL:
+            new_data_y[i] = CLASS_NON_NATIVE_VALUE
+    print("    {} data size is {}".format(debug_name, len(new_data_y)))
+    return new_data_y
+
+
+def read_parsed_data():
+    print("Reading parsed data")
+    func_words = read_file_to_list(FUNCTION_WORDS_FILE, -1)
+    train_x, train_y, test_x, test_y = get_data(TRAIN_TEST_SPLIT)
+
+    train_x_svm_ready = build_feature_vector(func_words, train_x, "Train")
+    train_y_svm_ready = enumerate_labels(train_y, "Train")
+
+    test_x_svm_ready = build_feature_vector(func_words, test_x, "Test")
+    test_y_svm_ready = enumerate_labels(test_y, "Test")
+
+    return train_x_svm_ready, train_y_svm_ready, test_x_svm_ready, test_y_svm_ready
+
+
+def run_svm(train_x_svm_ready, train_y_svm_ready, test_x_svm_ready, test_y_svm_ready):
+    # TODO - look over lilah hw5 and see how to fiddle the svm params
+    # TODO - change to RBF
+    print("Running SVM...")
+    clf = SVC()
+    specs = clf.fit(train_x_svm_ready, train_y_svm_ready)
+    print("SVM info:")
+    print("  {}".format(specs))
+    score = clf.score(test_x_svm_ready, test_y_svm_ready)
+    print("    Accuracy={}%".format(score*100))
+
+    # TODO - delete
+    # prediction_y = clf.predict(test_x_svm_ready)
+    # good = 0
+    # for i in range(len(test_y_svm_ready)):
+    #     if test_y_svm_ready[i] == prediction_y[i]:
+    #         good += 1
+    # acc = good / len(test_y_svm_ready)
+    # print(acc)
+    return
+
+
+def run_example():
+    print("Running SVM toy example...")
+    train_x = np.array([[-3], [-2], [2], [3]])
+    train_y = np.array([-1, -1, 1, 1])
+    clf = SVC()
+    specs = clf.fit(train_x, train_y)
+    print("SVM info:")
+    print("  {}".format(specs))
+    test_x = [[5], [-1], [3], [2], [-0.1], [-2]]
+    test_y = [1, -1, 1, 1, -1, -1]
+    score = clf.score(test_x, test_y)
+    print("Accuracy={}%".format(score*100))
+    return
 
 
 def main():
     # if os.path.exists(PARSED_DATA_PATH): shutil.rmtree(PARSED_DATA_PATH)  # TODO delete
     maybe_parse_data()
-    func_words = read_file_to_list(FUNCTION_WORDS_FILE, "func_words")
-    train_x, train_y, test_x, test_y = get_data(TRAIN_TEST_SPLIT)
-    # train_x_fv = build_feature_vector(func_words, train_x)
-    train_x_fv = build_feature_vector2(func_words, train_x)
-    test_x_fv = build_feature_vector2(func_words, test_x)
+    train_x_svm_ready, train_y_svm_ready, test_x_svm_ready, test_y_svm_ready = read_parsed_data()
+    run_svm(train_x_svm_ready, train_y_svm_ready, test_x_svm_ready, test_y_svm_ready)
 
-    # working code
-    # X = np.array([[-1], [-2], [1], [5]])
-    # y = np.array([1, 1, 2, 2])
-    # clf = SVC()
-    # clf.fit(X, y)
-    # print(clf.predict([[5], [-1], [3], [2], [0], [-2]]))
+    # run_example()
 
-	
-	TODO - look over lilah hw5 and see how to fiddle the svm params
-	TODO - change to RBF
-    clf = SVC()
-    clf.fit(train_x_fv, train_y)
-    score = clf.score(test_x_fv, test_y)
-    print("acc={}".format(score))
-
-    prediction_y = clf.predict(test_x_fv)
-    good = 0
-    for i in range(len(test_y)):
-        if test_y[i] == prediction_y[i]:
-            good += 1
-    acc = good / len(test_y)
-    print(acc)
-
-    # # SVC(C=1.0, cache_size=200, class_weight=None, coef0=0.0,
-    # #     decision_function_shape='ovr', degree=3, gamma='auto', kernel='rbf',
-    # #     max_iter=-1, probability=False, random_state=None, shrinking=True,
-    # #     tol=0.001, verbose=False)
 
 if __name__ == "__main__":
     main()
