@@ -25,12 +25,12 @@ CLASS_NATIVE_VALUE = 1
 CLASS_NON_NATIVE_VALUE = -1
 TRAIN_TEST_SPLIT = 0.8
 
-FEATURE_VECTOR = False
+FEATURE_VECTOR = True
 TOP_WORDS = True
 NUM_OF_TOP_WORDS = 230
 
 RUN_SVM_K_FOLD = True
-K = 3
+K = 7
 RUN_DEC_TREE = True
 RUN_NB = True
 
@@ -222,14 +222,14 @@ def run_svm(train_x_svm_ready, train_y_svm_ready, test_x_svm_ready, test_y_svm_r
     return
 
 
-def run_svm_with_k_fold(data_x, data_y):
-    print("Running K-FOLD SVM with k={}".format(K))
-    kf = KFold(n_splits=K)
+def run_svm_with_k_fold(data_x, data_y, k):
+    print("Running K-FOLD SVM with k={}".format(k))
+    kf = KFold(n_splits=k)
     all_data_x = np.array(data_x)
     all_data_y = np.array(data_y)
     i = 1
     for train_index, test_index in kf.split(all_data_x):
-        print("    k={}".format(i))
+        print("    split {}".format(i))
         current_train_x, current_test_x = all_data_x[train_index], all_data_x[test_index]
         current_train_y, current_test_y = all_data_y[train_index], all_data_y[test_index]
         run_svm(current_train_x, current_train_y, current_test_x, current_test_y)
@@ -326,7 +326,7 @@ def make_top_words_list(all_rows, func_words):
     #     if temp % 5 == 0:
     #         print(str)
     #         str = ""
-    #
+    # print("XXXXXXXXXXXXXXXXXXXXXXXX")
     # str = ""
     # temp = 0
     # for key, value in non_native_top_words_dict:
@@ -335,7 +335,7 @@ def make_top_words_list(all_rows, func_words):
     #     if temp % 5 == 0:
     #         print(str)
     #         str = ""
-
+    # exit(338)
     # combining top words - removing duplicates
     top_words_list = []
     for key, _ in native_top_words_dict:
@@ -360,17 +360,18 @@ def main():
         print("Starting feature vector classification")
         # loads parsed data as feature vector array
         train_x_svm_rdy, train_y_svm_rdy, test_x_svm_rdy, test_y_svm_rdy = read_parsed_data(all_rows, func_words)
-        print("--------------------------------------")
+        print("-----------FEATURE_VECTOR_START---------------------------")
 
         if RUN_SVM_K_FOLD:
-            run_svm_with_k_fold(train_x_svm_rdy + test_x_svm_rdy, train_y_svm_rdy + test_y_svm_rdy)
+            for j in range(3, K):
+                run_svm_with_k_fold(train_x_svm_rdy + test_x_svm_rdy, train_y_svm_rdy + test_y_svm_rdy, j)
 
         if RUN_DEC_TREE:
             run_dec_tree(train_x_svm_rdy, train_y_svm_rdy, test_x_svm_rdy, test_y_svm_rdy)
 
         if RUN_NB:
             run_nb(train_x_svm_rdy, train_y_svm_rdy, test_x_svm_rdy, test_y_svm_rdy)
-        print("--------------------------------------")
+        print("-------------FEATURE_VECTOR_END-------------------------")
 
     if TOP_WORDS:
         print("Starting top x words classification")
@@ -378,17 +379,18 @@ def main():
         top_words_list = make_top_words_list(all_rows, func_words)
         # loads parsed data as count words array
         train_x_svm_rdy, train_y_svm_rdy, test_x_svm_rdy, test_y_svm_rdy = read_parsed_data(all_rows, top_words_list)
-        print("--------------------------------------")
+        print("------------------TOP_WORDS_START--------------------")
 
         if RUN_SVM_K_FOLD:
-            run_svm_with_k_fold(train_x_svm_rdy + test_x_svm_rdy, train_y_svm_rdy + test_y_svm_rdy)
+            for j in range(3, K):
+                run_svm_with_k_fold(train_x_svm_rdy + test_x_svm_rdy, train_y_svm_rdy + test_y_svm_rdy, j)
 
         if RUN_DEC_TREE:
             run_dec_tree(train_x_svm_rdy, train_y_svm_rdy, test_x_svm_rdy, test_y_svm_rdy)
 
         if RUN_NB:
             run_nb(train_x_svm_rdy, train_y_svm_rdy, test_x_svm_rdy, test_y_svm_rdy)
-        print("--------------------------------------")
+        print("---------------TOP_WORDS_END-----------------------")
     return
 
 

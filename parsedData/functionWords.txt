@@ -299,3 +299,13 @@ here
 too
 be
 example
+is
+are
+have
+not
+was
+there
+do
+n't
+had
+does
