@@ -2,6 +2,7 @@ import os
 import numpy as np
 import math
 from sklearn.svm import SVC
+from sklearn.model_selection import KFold
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.naive_bayes import MultinomialNB
 from time import time
@@ -24,10 +25,14 @@ CLASS_NATIVE_VALUE = 1
 CLASS_NON_NATIVE_VALUE = -1
 TRAIN_TEST_SPLIT = 0.8
 
-RUN_TOY_EXAMPLE = False
-RUN_SVM = False
+
+FEATURE_VECTOR = False
+TOP_WORDS = True
+
+RUN_SVM_K_FOLD = True
+K = 3
 RUN_DEC_TREE = False
-RUN_NB = True
+RUN_NB = False
 
 
 def read_raw_file_to_list(file, max_rows, label):
@@ -216,6 +221,21 @@ def run_svm(train_x_svm_ready, train_y_svm_ready, test_x_svm_ready, test_y_svm_r
     return
 
 
+def run_svm_with_k_fold(data_x, data_y):
+    print("Running K-FOLD SVM with k={}".format(K))
+    kf = KFold(n_splits=K)
+    all_data_x = np.array(data_x)
+    all_data_y = np.array(data_y)
+    i = 1
+    for train_index, test_index in kf.split(all_data_x):
+        print("    k={}".format(i))
+        current_train_x, current_test_x = all_data_x[train_index], all_data_x[test_index]
+        current_train_y, current_test_y = all_data_y[train_index], all_data_y[test_index]
+        run_svm(current_train_x, current_train_y, current_test_x, current_test_y)
+        i += 1
+    return
+
+
 def run_dec_tree(train_x_svm_ready, train_y_svm_ready, test_x_svm_ready, test_y_svm_ready):
     print("Running Decision Tree...")
     clf = DecisionTreeClassifier(random_state=0)
@@ -238,19 +258,19 @@ def run_nb(train_x_svm_ready, train_y_svm_ready, test_x_svm_ready, test_y_svm_re
     return
 
 
-def run_example():
-    print("Running SVM toy example...")
-    train_x = np.array([[-3], [-2], [2], [3]])
-    train_y = np.array([-1, -1, 1, 1])
-    clf = SVC(kernel='linear', cache_size=7000)
-    specs = clf.fit(train_x, train_y)
-    print("SVM info:")
-    print("  {}".format(specs))
-    test_x = [[5], [-1], [3], [2], [-0.1], [-2]]
-    test_y = [1, -1, 1, 1, -1, -1]
-    score = clf.score(test_x, test_y)
-    print("Accuracy={}%".format(score*100))
-    return
+# def run_example():
+#     print("Running SVM toy example...")
+#     train_x = np.array([[-3], [-2], [2], [3]])
+#     train_y = np.array([-1, -1, 1, 1])
+#     clf = SVC(kernel='linear', cache_size=7000)
+#     specs = clf.fit(train_x, train_y)
+#     print("SVM info:")
+#     print("  {}".format(specs))
+#     test_x = [[5], [-1], [3], [2], [-0.1], [-2]]
+#     test_y = [1, -1, 1, 1, -1, -1]
+#     score = clf.score(test_x, test_y)
+#     print("Accuracy={}%".format(score*100))
+#     return
 
 
 def output_all_args(duration):
@@ -263,21 +283,26 @@ def output_all_args(duration):
 def main():
     start_time = time()
 
-    if RUN_TOY_EXAMPLE:
-        run_example()
+    # creates parsed data - needs raw data
+    maybe_parse_data()
 
-    if RUN_SVM or RUN_DEC_TREE or RUN_NB:
-        maybe_parse_data()
+    if FEATURE_VECTOR:
+        print("Starting feature vector classification")
+        # loads parsed data as feature vector array
         train_x_svm_ready, train_y_svm_ready, test_x_svm_ready, test_y_svm_ready = read_parsed_data()
 
-    if RUN_SVM:
-        run_svm(train_x_svm_ready, train_y_svm_ready, test_x_svm_ready, test_y_svm_ready)
+        if RUN_SVM_K_FOLD:
+            run_svm_with_k_fold(train_x_svm_ready + test_x_svm_ready, train_y_svm_ready + test_y_svm_ready)
 
-    if RUN_DEC_TREE:
-        run_dec_tree(train_x_svm_ready, train_y_svm_ready, test_x_svm_ready, test_y_svm_ready)
+        if RUN_DEC_TREE:
+            run_dec_tree(train_x_svm_ready, train_y_svm_ready, test_x_svm_ready, test_y_svm_ready)
 
-    if RUN_NB:
-        run_nb(train_x_svm_ready, train_y_svm_ready, test_x_svm_ready, test_y_svm_ready)
+        if RUN_NB:
+            run_nb(train_x_svm_ready, train_y_svm_ready, test_x_svm_ready, test_y_svm_ready)
+
+    if TOP_WORDS:
+        print("Starting top x words classification")
+        all_rows = read_file_to_list(PARSED_DATA_FULL_PATH, -1)
 
     output_all_args(time() - start_time)
 
