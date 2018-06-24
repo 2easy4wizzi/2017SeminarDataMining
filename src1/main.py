@@ -34,7 +34,7 @@ def read_raw_file_to_list(file, max_rows, label):
         sub_string = line[line.find('['):line.find(']') + 1]
         line = line.replace(sub_string, '', 1)
         line = line.strip()
-        if len(line) >= MINIMUM_ROW_LENGTH:
+        if len(line.split()) >= MINIMUM_ROW_LENGTH:
             line = ("[" + label + "] " + line)
             my_list.append(line.lower())
     return my_list
