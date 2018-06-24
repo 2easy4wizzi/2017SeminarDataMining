@@ -2,6 +2,8 @@ import os
 import numpy as np
 import math
 from sklearn.svm import SVC
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.naive_bayes import MultinomialNB
 from time import time
 from collections import Counter
 import matplotlib.pyplot as plt
@@ -21,6 +23,11 @@ RANDOMIZE_DATA = False  # will alter the train-test samples
 CLASS_NATIVE_VALUE = 1
 CLASS_NON_NATIVE_VALUE = -1
 TRAIN_TEST_SPLIT = 0.8
+
+RUN_TOY_EXAMPLE = False
+RUN_SVM = False
+RUN_DEC_TREE = False
+RUN_NB = True
 
 
 def read_raw_file_to_list(file, max_rows, label):
@@ -209,6 +216,28 @@ def run_svm(train_x_svm_ready, train_y_svm_ready, test_x_svm_ready, test_y_svm_r
     return
 
 
+def run_dec_tree(train_x_svm_ready, train_y_svm_ready, test_x_svm_ready, test_y_svm_ready):
+    print("Running Decision Tree...")
+    clf = DecisionTreeClassifier(random_state=0)
+    specs = clf.fit(train_x_svm_ready, train_y_svm_ready)
+    print("SVM info:")
+    print("  {}".format(specs))
+    score = clf.score(test_x_svm_ready, test_y_svm_ready)
+    print("    Accuracy={}%".format(score*100))
+    return
+
+
+def run_nb(train_x_svm_ready, train_y_svm_ready, test_x_svm_ready, test_y_svm_ready):
+    print("Running NB...")
+    clf = MultinomialNB()
+    specs = clf.fit(train_x_svm_ready, train_y_svm_ready)
+    print("SVM info:")
+    print("  {}".format(specs))
+    score = clf.score(test_x_svm_ready, test_y_svm_ready)
+    print("    Accuracy={}%".format(score*100))
+    return
+
+
 def run_example():
     print("Running SVM toy example...")
     train_x = np.array([[-3], [-2], [2], [3]])
@@ -225,10 +254,6 @@ def run_example():
 
 
 def output_all_args(duration):
-    print("PARAMETERS summary:")
-    print("MINIMUM_ROW_LENGTH {}".format(MINIMUM_ROW_LENGTH))
-    print("RANDOMIZE_DATA {}".format(RANDOMIZE_DATA))
-    print("TRAIN_TEST_SPLIT {}".format(TRAIN_TEST_SPLIT))
     hours, rem = divmod(duration, 3600)
     minutes, seconds = divmod(rem, 60)
     print("duration(formatted HH:MM:SS): {:0>2}:{:0>2}:{:0>2}".format(int(hours), int(minutes), int(seconds)))
@@ -238,11 +263,22 @@ def output_all_args(duration):
 def main():
     start_time = time()
 
-    maybe_parse_data()
-    train_x_svm_ready, train_y_svm_ready, test_x_svm_ready, test_y_svm_ready = read_parsed_data()
+    if RUN_TOY_EXAMPLE:
+        run_example()
 
-    run_svm(train_x_svm_ready, train_y_svm_ready, test_x_svm_ready, test_y_svm_ready)
-    # run_example()
+    if RUN_SVM or RUN_DEC_TREE or RUN_NB:
+        maybe_parse_data()
+        train_x_svm_ready, train_y_svm_ready, test_x_svm_ready, test_y_svm_ready = read_parsed_data()
+
+    if RUN_SVM:
+        run_svm(train_x_svm_ready, train_y_svm_ready, test_x_svm_ready, test_y_svm_ready)
+
+    if RUN_DEC_TREE:
+        run_dec_tree(train_x_svm_ready, train_y_svm_ready, test_x_svm_ready, test_y_svm_ready)
+
+    if RUN_NB:
+        run_nb(train_x_svm_ready, train_y_svm_ready, test_x_svm_ready, test_y_svm_ready)
+
     output_all_args(time() - start_time)
 
 
