@@ -6,18 +6,19 @@ from time import time
 from collections import Counter
 import matplotlib.pyplot as plt
 
-RAW_DATA_PATH = "../rawData/reddit/"
+RAW_DATA_PATH = "../rawData/"
+REDDIT_DIR = "reddit/"
+TOFEL_DIR = "toefl/"
 NON_NATIVE_RAW_FOLDER_NAME = "non-native/"
 NATIVE_RAW_FOLDER_NAME = "native/"
-RAW_DATA_SIZE_FOR_EACH_CLASS = 1000000
 CLASS_NATIVE_LABEL = "native"
 CLASS_NON_NATIVE_LABEL = "non-native"
-MINIMUM_ROW_LENGTH = 25
+MINIMUM_ROW_LENGTH = 45
 
 PARSED_DATA_FULL_PATH = "../parsedData/alldata.txt"
 FUNCTION_WORDS_FILE = "../parsedData/functionWords.txt"
-RANDOMIZE_DATA = False  # will alter the train-test samples
-DATA_SET_SIZE = 50000
+RANDOMIZE_DATA = True  # will alter the train-test samples
+DATA_SET_SIZE = 22084
 CLASS_NATIVE_VALUE = 1
 CLASS_NON_NATIVE_VALUE = -1
 TRAIN_TEST_SPLIT = 0.8
@@ -40,8 +41,7 @@ def read_raw_file_to_list(file, max_rows, label):
     return my_list
 
 
-def parse_class(label, base_path, file_names):
-    size = RAW_DATA_SIZE_FOR_EACH_CLASS
+def parse_class(label, base_path, file_names, size):
     line_from_each_file = math.floor(size / len(file_names))
     msg = "    There are {} {} files. Total size of samples: floor({}/{})={}"
     print(msg.format(label, len(file_names), size, len(file_names), line_from_each_file))
@@ -59,13 +59,14 @@ def maybe_parse_data():
     if not os.path.exists(PARSED_DATA_FULL_PATH):
         print("Need to parse raw data")
         print("    Parsing raw data...")
-        base_path = RAW_DATA_PATH + NATIVE_RAW_FOLDER_NAME
-        native_file_names = os.listdir(base_path)
-        native_data = parse_class(CLASS_NATIVE_LABEL, base_path, native_file_names)
 
-        base_path = RAW_DATA_PATH + NON_NATIVE_RAW_FOLDER_NAME
+        base_path = RAW_DATA_PATH + TOFEL_DIR
         non_native_file_names = os.listdir(base_path)
-        non_native_data = parse_class(CLASS_NON_NATIVE_LABEL, base_path, non_native_file_names)
+        non_native_data = parse_class(CLASS_NON_NATIVE_LABEL, base_path, non_native_file_names, 1000000)
+
+        base_path = RAW_DATA_PATH + REDDIT_DIR + NATIVE_RAW_FOLDER_NAME
+        native_file_names = os.listdir(base_path)
+        native_data = parse_class(CLASS_NATIVE_LABEL, base_path, native_file_names, len(non_native_data))
 
         all_semi_raw_data = native_data + non_native_data
         np.random.shuffle(all_semi_raw_data)
@@ -89,8 +90,7 @@ def read_file_to_list(file, max_rows):
         if 0 < max_rows <= len(my_list):  # -1: read all file
             break
         line = line.strip()
-        if line not in my_list:
-            my_list.append(line.lower())
+        my_list.append(line.lower())
     print("    Reading file({} lines) {}".format(len(my_list), file))
     return my_list
 
@@ -202,13 +202,12 @@ def read_parsed_data():
 
 def run_svm(train_x_svm_ready, train_y_svm_ready, test_x_svm_ready, test_y_svm_ready):
     print("Running SVM...")
-    clf = SVC()
+    clf = SVC(cache_size=7000)
     specs = clf.fit(train_x_svm_ready, train_y_svm_ready)
     print("SVM info:")
     print("  {}".format(specs))
     score = clf.score(test_x_svm_ready, test_y_svm_ready)
     print("    Accuracy={}%".format(score*100))
-
     return
 
 
@@ -216,7 +215,7 @@ def run_example():
     print("Running SVM toy example...")
     train_x = np.array([[-3], [-2], [2], [3]])
     train_y = np.array([-1, -1, 1, 1])
-    clf = SVC()
+    clf = SVC(kernel='linear', cache_size=7000)
     specs = clf.fit(train_x, train_y)
     print("SVM info:")
     print("  {}".format(specs))
@@ -232,6 +231,7 @@ def main():
 
     maybe_parse_data()
     train_x_svm_ready, train_y_svm_ready, test_x_svm_ready, test_y_svm_ready = read_parsed_data()
+
     run_svm(train_x_svm_ready, train_y_svm_ready, test_x_svm_ready, test_y_svm_ready)
     # run_example()
 
@@ -239,7 +239,6 @@ def main():
     hours, rem = divmod(duration, 3600)
     minutes, seconds = divmod(rem, 60)
     print("duration(formatted HH:MM:SS): {:0>2}:{:0>2}:{:0>2}".format(int(hours), int(minutes), int(seconds)))
-
 
 
 if __name__ == "__main__":
