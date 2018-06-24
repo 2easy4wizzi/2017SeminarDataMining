@@ -17,8 +17,7 @@ MINIMUM_ROW_LENGTH = 45
 
 PARSED_DATA_FULL_PATH = "../parsedData/alldata.txt"
 FUNCTION_WORDS_FILE = "../parsedData/functionWords.txt"
-RANDOMIZE_DATA = True  # will alter the train-test samples
-DATA_SET_SIZE = 22084
+RANDOMIZE_DATA = False  # will alter the train-test samples
 CLASS_NATIVE_VALUE = 1
 CLASS_NON_NATIVE_VALUE = -1
 TRAIN_TEST_SPLIT = 0.8
@@ -96,7 +95,7 @@ def read_file_to_list(file, max_rows):
 
 
 def get_data(train_test_split):
-    all_rows = read_file_to_list(PARSED_DATA_FULL_PATH, DATA_SET_SIZE)
+    all_rows = read_file_to_list(PARSED_DATA_FULL_PATH, -1)
     if RANDOMIZE_DATA:
         np.random.shuffle(all_rows)  # will affect the train test split
     count_nat = 0
@@ -227,10 +226,9 @@ def run_example():
 
 def output_all_args(duration):
     print("PARAMETERS summary:")
-    print("MINIMUM_ROW_LENGTH".format(MINIMUM_ROW_LENGTH))
-    print("RANDOMIZE_DATA".format(RANDOMIZE_DATA))
-    print("DATA_SET_SIZE".format(DATA_SET_SIZE))
-    print("TRAIN_TEST_SPLIT".format(TRAIN_TEST_SPLIT))
+    print("MINIMUM_ROW_LENGTH {}".format(MINIMUM_ROW_LENGTH))
+    print("RANDOMIZE_DATA {}".format(RANDOMIZE_DATA))
+    print("TRAIN_TEST_SPLIT {}".format(TRAIN_TEST_SPLIT))
     hours, rem = divmod(duration, 3600)
     minutes, seconds = divmod(rem, 60)
     print("duration(formatted HH:MM:SS): {:0>2}:{:0>2}:{:0>2}".format(int(hours), int(minutes), int(seconds)))
