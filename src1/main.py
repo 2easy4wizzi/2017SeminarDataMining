@@ -12,12 +12,12 @@ NATIVE_RAW_FOLDER_NAME = "native/"
 RAW_DATA_SIZE_FOR_EACH_CLASS = 1000000
 CLASS_NATIVE_LABEL = "native"
 CLASS_NON_NATIVE_LABEL = "non-native"
-MINIMUM_ROW_LENGTH = 35
+MINIMUM_ROW_LENGTH = 25
 
 PARSED_DATA_FULL_PATH = "../parsedData/alldata.txt"
 FUNCTION_WORDS_FILE = "../parsedData/functionWords.txt"
 RANDOMIZE_DATA = False  # will alter the train-test samples
-DATA_SET_SIZE = 150000
+DATA_SET_SIZE = 50000
 CLASS_NATIVE_VALUE = 1
 CLASS_NON_NATIVE_VALUE = -1
 TRAIN_TEST_SPLIT = 0.8
@@ -155,14 +155,11 @@ def build_feature_vector(func_words, data_x, debug_name):
                 func_word_split = func_word.split()
                 sample_words = sample.split()
                 word_counter = len(sample_words)
-                print(func_word_split)
-                print(sample_words)
-                print(word_counter)
                 for i in range(word_counter):
                     if sample_words[i] == func_word_split[0]:
                         match = True
                         for j in range(1, len(func_word_split)):
-                            if sample_words[i + j] != func_word_split[j]:
+                            if (i + j) < len(sample_words) and sample_words[i + j] != func_word_split[j]:
                                 match = False
                                 break
                         if match:
