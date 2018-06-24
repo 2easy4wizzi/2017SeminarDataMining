@@ -25,7 +25,6 @@ CLASS_NATIVE_VALUE = 1
 CLASS_NON_NATIVE_VALUE = -1
 TRAIN_TEST_SPLIT = 0.8
 
-
 FEATURE_VECTOR = False
 TOP_WORDS = True
 
@@ -49,6 +48,7 @@ def read_raw_file_to_list(file, max_rows, label):
         if len(line.split()) >= MINIMUM_ROW_LENGTH:
             line = ("[" + label + "] " + line)
             my_list.append(line.lower())
+    f.close()
     return my_list
 
 
@@ -86,7 +86,7 @@ def maybe_parse_data():
         dst_file = open(PARSED_DATA_FULL_PATH, 'w+', encoding="utf8")
         for line in all_semi_raw_data:
             dst_file.write(line + '\n')
-
+        dst_file.close()
         print("    file {} with {} lines was created".format(PARSED_DATA_FULL_PATH, len(all_semi_raw_data)))
         print("    Finished Parsing raw data")
     else:
@@ -102,6 +102,7 @@ def read_file_to_list(file, max_rows):
             break
         line = line.strip()
         my_list.append(line.lower())
+    f.close()
     print("    Reading file({} lines) {}".format(len(my_list), file))
     return my_list
 
@@ -196,9 +197,8 @@ def enumerate_labels(data_y, debug_name):
     return new_data_y
 
 
-def read_parsed_data():
+def read_parsed_data(func_words):  # func_words could be just top x words
     print("Reading parsed data")
-    func_words = read_file_to_list(FUNCTION_WORDS_FILE, -1)
     train_x, train_y, test_x, test_y = get_data(TRAIN_TEST_SPLIT)
 
     train_x_svm_ready = build_feature_vector(func_words, train_x, "Train")
@@ -217,7 +217,7 @@ def run_svm(train_x_svm_ready, train_y_svm_ready, test_x_svm_ready, test_y_svm_r
     print("SVM info:")
     print("  {}".format(specs))
     score = clf.score(test_x_svm_ready, test_y_svm_ready)
-    print("    Accuracy={}%".format(score*100))
+    print("    Accuracy={}%".format(score * 100))
     return
 
 
@@ -240,10 +240,10 @@ def run_dec_tree(train_x_svm_ready, train_y_svm_ready, test_x_svm_ready, test_y_
     print("Running Decision Tree...")
     clf = DecisionTreeClassifier(random_state=0)
     specs = clf.fit(train_x_svm_ready, train_y_svm_ready)
-    print("SVM info:")
+    print("Tree info:")
     print("  {}".format(specs))
     score = clf.score(test_x_svm_ready, test_y_svm_ready)
-    print("    Accuracy={}%".format(score*100))
+    print("    Accuracy={}%".format(score * 100))
     return
 
 
@@ -251,10 +251,10 @@ def run_nb(train_x_svm_ready, train_y_svm_ready, test_x_svm_ready, test_y_svm_re
     print("Running NB...")
     clf = MultinomialNB()
     specs = clf.fit(train_x_svm_ready, train_y_svm_ready)
-    print("SVM info:")
+    print("NB info:")
     print("  {}".format(specs))
     score = clf.score(test_x_svm_ready, test_y_svm_ready)
-    print("    Accuracy={}%".format(score*100))
+    print("    Accuracy={}%".format(score * 100))
     return
 
 
@@ -281,15 +281,14 @@ def output_all_args(duration):
 
 
 def main():
-    start_time = time()
-
     # creates parsed data - needs raw data
     maybe_parse_data()
 
     if FEATURE_VECTOR:
         print("Starting feature vector classification")
+        func_words = read_file_to_list(FUNCTION_WORDS_FILE, -1)
         # loads parsed data as feature vector array
-        train_x_svm_ready, train_y_svm_ready, test_x_svm_ready, test_y_svm_ready = read_parsed_data()
+        train_x_svm_ready, train_y_svm_ready, test_x_svm_ready, test_y_svm_ready = read_parsed_data(func_words)
 
         if RUN_SVM_K_FOLD:
             run_svm_with_k_fold(train_x_svm_ready + test_x_svm_ready, train_y_svm_ready + test_y_svm_ready)
@@ -304,8 +303,86 @@ def main():
         print("Starting top x words classification")
         all_rows = read_file_to_list(PARSED_DATA_FULL_PATH, -1)
 
-    output_all_args(time() - start_time)
+        all_native = []
+        all_non_native = []
+        for row in all_rows:
+            if row.startswith("[" + CLASS_NATIVE_LABEL):
+                all_native.append(row)
+            elif row.startswith("[" + CLASS_NON_NATIVE_LABEL):
+                all_non_native.append(row)
+
+        ignore_list1 = [',', '.', '``', '\'\'', ')', '(', '*', ']', '[', '**', '\'', '...', '-', '>', '<', ':', '`'
+            , '--', '?', ';', '%', '^', ';', '/', "?", '--', '$', '&', '|', '~', '!']
+        func_words = read_file_to_list(FUNCTION_WORDS_FILE, -1)
+
+        vocabulary_native = {}
+        for row in all_native:
+            row_words = row.split()
+            for i in range(1, len(row_words)):
+                if row_words[i] not in vocabulary_native:
+                    vocabulary_native[row_words[i]] = 0
+                else:
+                    vocabulary_native[row_words[i]] += 1
+        for k in ignore_list1 + func_words:
+            vocabulary_native.pop(k, None)
+
+        vocabulary_native = sorted(vocabulary_native.items(), key=lambda kv: kv[1], reverse=True)
+
+        vocabulary_non_native = {}
+        for row in all_non_native:
+            row_words = row.split()
+            for i in range(1, len(row_words)):
+                if row_words[i] not in vocabulary_non_native:
+                    vocabulary_non_native[row_words[i]] = 0
+                else:
+                    vocabulary_non_native[row_words[i]] += 1
+        for k in ignore_list1 + func_words:
+            vocabulary_non_native.pop(k, None)
+
+        vocabulary_non_native = sorted(vocabulary_non_native.items(), key=lambda kv: kv[1], reverse=True)
+
+        num_top_words = 230
+        native_top_words_dict = vocabulary_native[:num_top_words]
+        # print(native_top_words)
+
+        non_native_top_words_dict = vocabulary_non_native[:num_top_words]
+        # print(non_native_top_words)
+
+        # str = ""
+        # temp = 0
+        # for key, value in native_top_words_dict:
+        #     str += " " + key
+        #     temp += 1
+        #     if temp % 5 == 0:
+        #         print(str)
+        #         str = ""
+        #
+        # str = ""
+        # temp = 0
+        # for key, value in non_native_top_words_dict:
+        #     str += " " + key
+        #     temp += 1
+        #     if temp % 5 == 0:
+        #         print(str)
+        #         str = ""
+
+        top_words_list = []
+        for key, _ in native_top_words_dict:
+            if key not in top_words_list:
+                top_words_list.append(key)
+        # print(len(top_words_list))
+        for key, _ in non_native_top_words_dict:
+            if key not in top_words_list:
+                top_words_list.append(key)
+        # print(len(top_words_list))
+
+        train_x_svm_ready, train_y_svm_ready, test_x_svm_ready, test_y_svm_ready = read_parsed_data(top_words_list)
+        run_svm(train_x_svm_ready, train_y_svm_ready, test_x_svm_ready, test_y_svm_ready)
+        run_dec_tree(train_x_svm_ready, train_y_svm_ready, test_x_svm_ready, test_y_svm_ready)
+        run_nb(train_x_svm_ready, train_y_svm_ready, test_x_svm_ready, test_y_svm_ready)
 
 
 if __name__ == "__main__":
+    start_time = time()
     main()
+    output_all_args(time() - start_time)
