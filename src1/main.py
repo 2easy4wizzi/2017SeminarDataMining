@@ -1,10 +1,10 @@
 import os
 import numpy as np
 import math
-import shutil
 from sklearn.svm import SVC
+from time import time
+from collections import Counter
 import matplotlib.pyplot as plt
-import random
 
 RAW_DATA_PATH = "../rawData/reddit/"
 NON_NATIVE_RAW_FOLDER_NAME = "non-native/"
@@ -12,7 +12,7 @@ NATIVE_RAW_FOLDER_NAME = "native/"
 RAW_DATA_SIZE_FOR_EACH_CLASS = 1000000
 CLASS_NATIVE_LABEL = "native"
 CLASS_NON_NATIVE_LABEL = "non-native"
-MINIMUM_ROW_LENGTH = 10  # TODO - length by chars not words
+MINIMUM_ROW_LENGTH = 35
 
 PARSED_DATA_FULL_PATH = "../parsedData/alldata.txt"
 FUNCTION_WORDS_FILE = "../parsedData/functionWords.txt"
@@ -34,7 +34,7 @@ def read_raw_file_to_list(file, max_rows, label):
         sub_string = line[line.find('['):line.find(']') + 1]
         line = line.replace(sub_string, '', 1)
         line = line.strip()
-        if len(line) >= MINIMUM_ROW_LENGTH and line not in my_list:
+        if len(line) >= MINIMUM_ROW_LENGTH:
             line = ("[" + label + "] " + line)
             my_list.append(line.lower())
     return my_list
@@ -43,7 +43,7 @@ def read_raw_file_to_list(file, max_rows, label):
 def parse_class(label, base_path, file_names):
     size = RAW_DATA_SIZE_FOR_EACH_CLASS
     line_from_each_file = math.floor(size / len(file_names))
-    msg = "    There are {} {} files. Total size of samples: floor({}*{})={}"
+    msg = "    There are {} {} files. Total size of samples: floor({}/{})={}"
     print(msg.format(label, len(file_names), size, len(file_names), line_from_each_file))
     all_rows_raw = []
     debug_files_names = ""
@@ -146,21 +146,32 @@ def get_data(train_test_split):
 
 def build_feature_vector(func_words, data_x, debug_name):
     all_f_vecs = []
-    iters = 0
     for sample in data_x:
         f_vec = [0] * len(func_words)
-        count = 0
+        iter_num = 0
         # TODO - separate cases - if func_word == 1 go over sample. if bigger then do find
         for func_word in func_words:
-            a = sample.find(func_word)
-            if a != -1:
-                # checking that the func word is not contained in another word (ex: the 'a' is not part of 'gilad')
-                pre = a > 0 and not sample[a - 1].isalpha()  # checking before the word there isn't another char
-                post = a + len(func_word) < len(sample) and not sample[a + len(func_word)].isalpha()  # checking after
-                if pre and post:
-                    f_vec[count] += 1
-            count += 1
-        iters += 1
+            if len(func_word.split()) > 1:  # func_word is a phrase
+                func_word_split = func_word.split()
+                sample_words = sample.split()
+                word_counter = len(sample_words)
+                print(func_word_split)
+                print(sample_words)
+                print(word_counter)
+                for i in range(word_counter):
+                    if sample_words[i] == func_word_split[0]:
+                        match = True
+                        for j in range(1, len(func_word_split)):
+                            if sample_words[i + j] != func_word_split[j]:
+                                match = False
+                                break
+                        if match:
+                            f_vec[iter_num] += 1
+            else:
+                counts = Counter(sample.split())
+                f_vec[iter_num] += counts[func_words[iter_num]]
+            iter_num += 1
+
         all_f_vecs.append(f_vec)
 
     print("    {} data 'all feature vector' size is {}x{}".format(debug_name, len(all_f_vecs[0]), len(all_f_vecs)))
@@ -193,8 +204,6 @@ def read_parsed_data():
 
 
 def run_svm(train_x_svm_ready, train_y_svm_ready, test_x_svm_ready, test_y_svm_ready):
-    # TODO - look over lilah hw5 and see how to fiddle the svm params
-    # TODO - change to RBF
     print("Running SVM...")
     clf = SVC()
     specs = clf.fit(train_x_svm_ready, train_y_svm_ready)
@@ -203,14 +212,6 @@ def run_svm(train_x_svm_ready, train_y_svm_ready, test_x_svm_ready, test_y_svm_r
     score = clf.score(test_x_svm_ready, test_y_svm_ready)
     print("    Accuracy={}%".format(score*100))
 
-    # TODO - delete
-    # prediction_y = clf.predict(test_x_svm_ready)
-    # good = 0
-    # for i in range(len(test_y_svm_ready)):
-    #     if test_y_svm_ready[i] == prediction_y[i]:
-    #         good += 1
-    # acc = good / len(test_y_svm_ready)
-    # print(acc)
     return
 
 
@@ -230,12 +231,18 @@ def run_example():
 
 
 def main():
-    # if os.path.exists(PARSED_DATA_PATH): shutil.rmtree(PARSED_DATA_PATH)  # TODO delete
+    start_time = time()
+
     maybe_parse_data()
     train_x_svm_ready, train_y_svm_ready, test_x_svm_ready, test_y_svm_ready = read_parsed_data()
     run_svm(train_x_svm_ready, train_y_svm_ready, test_x_svm_ready, test_y_svm_ready)
-
     # run_example()
+
+    duration = time() - start_time
+    hours, rem = divmod(duration, 3600)
+    minutes, seconds = divmod(rem, 60)
+    print("duration(formatted HH:MM:SS): {:0>2}:{:0>2}:{:0>2}".format(int(hours), int(minutes), int(seconds)))
+
 
 
 if __name__ == "__main__":

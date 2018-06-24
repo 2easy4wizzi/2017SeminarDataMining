@@ -4,3 +4,4 @@ src1/.idea/*
 src1/venv2/*
 .idea/*
 parsedData/alldata.txt
+src1/scrap_book.py
