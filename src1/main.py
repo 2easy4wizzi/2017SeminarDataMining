@@ -253,6 +253,7 @@ def run_nb(train_x_svm_ready, train_y_svm_ready, test_x_svm_ready, test_y_svm_re
     print("Running NB...")
     clf = MultinomialNB()
     clf.fit(train_x_svm_ready, train_y_svm_ready)
+    prec, recall, fscore, support = metrics.precision_recall_fscore_support(y_true, y_pred)
     # specs = clf.fit(train_x_svm_ready, train_y_svm_ready)
     # print("NB info:")
     # print("  {}".format(specs))
