@@ -1,14 +1,10 @@
 from main import read_file_to_list
 from main import read_parsed_data
 import numpy as np
-import matplotlib.mlab as mlab
 import matplotlib.pyplot as plt
 
-
-
-
-# PARSED_DATA_FULL_PATH = "../parsedData/alldata.txt"
-PARSED_DATA_FULL_PATH = "../parsedData/shortalldata.txt"
+PARSED_DATA_FULL_PATH = "../parsedData/alldata.txt"
+# PARSED_DATA_FULL_PATH = "../parsedData/shortalldata.txt"
 FUNCTION_WORDS_FILE = "../parsedData/functionWords.txt"
 RANDOMIZE_DATA = False  # will alter the train-test samples
 CLASS_NATIVE_VALUE = 1
@@ -27,11 +23,14 @@ RUN_NB = True
 
 def print_top_x_f_words(class_name, super_vec, func_words):
     temp_super_vec = super_vec[:]
+    total = 0
     print(class_name)
     for i in range(10):
         index_max = np.argmax(temp_super_vec)
         print("{}){} {}".format(i, func_words[index_max], temp_super_vec[index_max]))
+        total += temp_super_vec[index_max]
         temp_super_vec[index_max] = -1
+    print("Total count for 10 top f_words={}".format(total))
     return
 
 
@@ -81,6 +80,7 @@ def calc_mse_from_avg(name, super_vec):
     for i in range(list_len):
         nat_mse += pow(float(sv[i]) - list_avg, 2)
 
+    nat_mse /= list_len
     print("{}: average usage={}. mse from avg={}".format(name, list_avg, nat_mse))
     return
 
@@ -97,11 +97,11 @@ def main():
     nat_super_vec = make_super_vec(len(func_words), data_x_nat)
     non_super_vec = make_super_vec(len(func_words), data_x_non)
 
-    # print_top_x_f_words("Native:", nat_super_vec, func_words)
-    # print_top_x_f_words("NON-Native:", non_super_vec, func_words)
+    print_top_x_f_words("Native:", nat_super_vec, func_words)
+    print_top_x_f_words("NON-Native:", non_super_vec, func_words)
 
     # show2bar_charts(nat_super_vec,non_super_vec)
-
+    print("\nMSE from count average:")
     calc_mse_from_avg("Native", nat_super_vec)
     calc_mse_from_avg("NON-Native", non_super_vec)
 
