@@ -27,12 +27,12 @@ CLASS_NON_NATIVE_VALUE = -1
 TRAIN_TEST_SPLIT = 0.8
 
 FUNC_WORDS = True
-TOP_WORDS = False
+TOP_WORDS = True
 NUM_OF_TOP_WORDS = 230
 
-RUN_SVM_K_FOLD = False
+RUN_SVM_K_FOLD = True
 K = 3
-RUN_DEC_TREE = False
+RUN_DEC_TREE = True
 RUN_NB = True
 
 
@@ -218,9 +218,10 @@ def run_svm(train_x_svm_ready, train_y_svm_ready, test_x_svm_ready, test_y_svm_r
     # specs = clf.fit(train_x_svm_ready, train_y_svm_ready)
     # print("SVM info:")
     # print("  {}".format(specs))
-    score = clf.score(test_x_svm_ready, test_y_svm_ready)
-    print("    Accuracy={}%".format(score * 100))
-    return
+    y_pred = clf.predict(test_x_svm_ready)
+    # score = clf.score(test_x_svm_ready, test_y_svm_ready)
+    score = print_info_of_predict(test_y_svm_ready, y_pred)
+    return score
 
 
 def run_svm_with_k_fold(data_x, data_y, k):
@@ -229,12 +230,14 @@ def run_svm_with_k_fold(data_x, data_y, k):
     all_data_x = np.array(data_x)
     all_data_y = np.array(data_y)
     i = 1
+    score_sum = 0
     for train_index, test_index in kf.split(all_data_x):
-        print("    split {}".format(i))
+        print("    split {}:".format(i))
         current_train_x, current_test_x = all_data_x[train_index], all_data_x[test_index]
         current_train_y, current_test_y = all_data_y[train_index], all_data_y[test_index]
-        run_svm(current_train_x, current_train_y, current_test_x, current_test_y)
+        score_sum += run_svm(current_train_x, current_train_y, current_test_x, current_test_y)
         i += 1
+    print("Summary: SVM average accuracy={}%".format(score_sum/k))
     return
 
 
@@ -245,8 +248,9 @@ def run_dec_tree(train_x_svm_ready, train_y_svm_ready, test_x_svm_ready, test_y_
     # specs = clf.fit(train_x_svm_ready, train_y_svm_ready)
     # print("Tree info:")
     # print("  {}".format(specs))
-    score = clf.score(test_x_svm_ready, test_y_svm_ready)
-    print("    Accuracy={}%".format(score * 100))
+    y_pred = clf.predict(test_x_svm_ready)
+    # score = clf.score(test_x_svm_ready, test_y_svm_ready)
+    print_info_of_predict(test_y_svm_ready, y_pred)
     return
 
 
@@ -259,13 +263,17 @@ def run_nb(train_x_svm_ready, train_y_svm_ready, test_x_svm_ready, test_y_svm_re
     # print("  {}".format(specs))
     y_pred = clf.predict(test_x_svm_ready)
     # score = clf.score(test_x_svm_ready, test_y_svm_ready)
+    print_info_of_predict(test_y_svm_ready, y_pred)
+    return
+
+
+def print_info_of_predict(test_y_svm_ready, y_pred):
     n = len(y_pred)
     good = 0
     for i in range(n):
         if y_pred[i] == test_y_svm_ready[i]:
             good += 1
     score = good / n
-
     c_non = CLASS_NON_NATIVE_VALUE
     c_nat = CLASS_NATIVE_VALUE
 
@@ -276,11 +284,7 @@ def run_nb(train_x_svm_ready, train_y_svm_ready, test_x_svm_ready, test_y_svm_re
     print("fscore   {} - harmonicAvg(prec + recall) ".format(fscore))
 
     print("Total accuracy={}%".format(score * 100))
-
-    print_info_of_predict(test_y_svm_ready, y_pred)
-
-    return
-
+    return score
 
 # def run_example():
 #     print("Running SVM toy example...")
