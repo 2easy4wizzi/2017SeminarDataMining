@@ -2,12 +2,8 @@
 rawData/*
 src1/.idea/*
 src1/venv2/*
-.idea/*
-parsedData/alldata.txt
-src1/scrap_book.py
-misc/~$tempts.docx
+parsedData/alldata(copy).txt
 parsedData/alldata(redditNativeAndTofelNon.txt
 parsedData/alldata(redditOnly).txt
-misc/~WRL1191.tmp
-parsedData/alldata(copy).txt
 parsedData/functionWords(291).txt
+src1/scrap_book.py

@@ -7,6 +7,7 @@ from sklearn.tree import DecisionTreeClassifier
 from sklearn.naive_bayes import MultinomialNB
 from time import time
 from collections import Counter
+from sklearn.metrics import precision_recall_fscore_support
 import matplotlib.pyplot as plt
 
 RAW_DATA_PATH = "../rawData/"
@@ -253,12 +254,31 @@ def run_nb(train_x_svm_ready, train_y_svm_ready, test_x_svm_ready, test_y_svm_re
     print("Running NB...")
     clf = MultinomialNB()
     clf.fit(train_x_svm_ready, train_y_svm_ready)
-    prec, recall, fscore, support = metrics.precision_recall_fscore_support(y_true, y_pred)
     # specs = clf.fit(train_x_svm_ready, train_y_svm_ready)
     # print("NB info:")
     # print("  {}".format(specs))
-    score = clf.score(test_x_svm_ready, test_y_svm_ready)
-    print("    Accuracy={}%".format(score * 100))
+    y_pred = clf.predict(test_x_svm_ready)
+    # score = clf.score(test_x_svm_ready, test_y_svm_ready)
+    n = len(y_pred)
+    good = 0
+    for i in range(n):
+        if y_pred[i] == test_y_svm_ready[i]:
+            good += 1
+    score = good / n
+
+    c_non = CLASS_NON_NATIVE_VALUE
+    c_nat = CLASS_NATIVE_VALUE
+
+    prec, recall, fscore, _ = precision_recall_fscore_support(test_y_svm_ready, y_pred, labels=[c_non, c_nat])
+    print("          " + CLASS_NON_NATIVE_LABEL + "  " + CLASS_NATIVE_LABEL)
+    print("precision{} - tp/(tp+fp) ".format(prec))  # from all positives - how much did you catch
+    print("recall   {} - tp/(tp+fn) ".format(recall))  # from predicted positive - how many are really positive
+    print("fscore   {} - harmonicAvg(prec + recall) ".format(fscore))
+
+    print("Total accuracy={}%".format(score * 100))
+
+    print_info_of_predict(test_y_svm_ready, y_pred)
+
     return
 
 
