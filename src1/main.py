@@ -270,9 +270,12 @@ def run_nb(train_x_svm_ready, train_y_svm_ready, test_x_svm_ready, test_y_svm_re
 def print_info_of_predict(test_y_svm_ready, y_pred):
     n = len(y_pred)
     good = 0
+    num_non_nat = 0
     for i in range(n):
         if y_pred[i] == test_y_svm_ready[i]:
             good += 1
+        if test_y_svm_ready[i] == CLASS_NON_NATIVE_VALUE:
+            num_non_nat += 1
     score = good / n
     c_non = CLASS_NON_NATIVE_VALUE
     c_nat = CLASS_NATIVE_VALUE
@@ -282,8 +285,9 @@ def print_info_of_predict(test_y_svm_ready, y_pred):
     print("precision{} - tp/(tp+fp) ".format(prec))  # from all positives - how much did you catch
     print("recall   {} - tp/(tp+fn) ".format(recall))  # from predicted positive - how many are really positive
     print("fscore   {} - harmonicAvg(prec + recall) ".format(fscore))
-
-    print("Total accuracy={}%".format(score * 100))
+    fscore_w = (fscore[0]*(num_non_nat/n) + fscore[1]*(1 - num_non_nat/n))
+    print("fscore weighted ={} - (fscore1*realPortion+fscore2*realPortion)".format(fscore_w))
+    print("Total accuracy  ={}%".format(score * 100))
     return score
 
 # def run_example():
