@@ -25,13 +25,13 @@ CLASS_NATIVE_VALUE = 1
 CLASS_NON_NATIVE_VALUE = -1
 TRAIN_TEST_SPLIT = 0.8
 
-FEATURE_VECTOR = True
-TOP_WORDS = True
+FUNC_WORDS = True
+TOP_WORDS = False
 NUM_OF_TOP_WORDS = 230
 
-RUN_SVM_K_FOLD = True
-K = 7
-RUN_DEC_TREE = True
+RUN_SVM_K_FOLD = False
+K = 3
+RUN_DEC_TREE = False
 RUN_NB = True
 
 
@@ -356,22 +356,22 @@ def main():
     # reading all_rows anyway
     all_rows = read_file_to_list(PARSED_DATA_FULL_PATH, -1)
 
-    if FEATURE_VECTOR:
+    if FUNC_WORDS:
         print("Starting feature vector classification")
         # loads parsed data as feature vector array
         train_x_svm_rdy, train_y_svm_rdy, test_x_svm_rdy, test_y_svm_rdy = read_parsed_data(all_rows, func_words)
-        print("-----------FEATURE_VECTOR_START---------------------------")
+        print("-----------FUNC_WORDS_START---------------------------")
 
         if RUN_SVM_K_FOLD:
-            for j in range(3, K):
-                run_svm_with_k_fold(train_x_svm_rdy + test_x_svm_rdy, train_y_svm_rdy + test_y_svm_rdy, j)
+            # for j in range(3, K):
+            run_svm_with_k_fold(train_x_svm_rdy + test_x_svm_rdy, train_y_svm_rdy + test_y_svm_rdy, K)
 
         if RUN_DEC_TREE:
             run_dec_tree(train_x_svm_rdy, train_y_svm_rdy, test_x_svm_rdy, test_y_svm_rdy)
 
         if RUN_NB:
             run_nb(train_x_svm_rdy, train_y_svm_rdy, test_x_svm_rdy, test_y_svm_rdy)
-        print("-------------FEATURE_VECTOR_END-------------------------")
+        print("-------------FUNC_WORDS_END-------------------------")
 
     if TOP_WORDS:
         print("Starting top x words classification")
@@ -382,8 +382,8 @@ def main():
         print("------------------TOP_WORDS_START--------------------")
 
         if RUN_SVM_K_FOLD:
-            for j in range(3, K):
-                run_svm_with_k_fold(train_x_svm_rdy + test_x_svm_rdy, train_y_svm_rdy + test_y_svm_rdy, j)
+            # for j in range(3, K):
+            run_svm_with_k_fold(train_x_svm_rdy + test_x_svm_rdy, train_y_svm_rdy + test_y_svm_rdy, K)
 
         if RUN_DEC_TREE:
             run_dec_tree(train_x_svm_rdy, train_y_svm_rdy, test_x_svm_rdy, test_y_svm_rdy)
