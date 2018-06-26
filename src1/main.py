@@ -18,10 +18,8 @@ NATIVE_RAW_FOLDER_NAME = "native/"
 CLASS_NATIVE_LABEL = "native"
 CLASS_NON_NATIVE_LABEL = "non-native"
 MINIMUM_ROW_LENGTH = 45
-MINIMUM_ROW_LENGTH = 10
-# MINIMUM_ROW_LENGTH = 25
 
-PARSED_DATA_FULL_PATH = "../parsedData/alldata10.txt"
+PARSED_DATA_FULL_PATH = "../parsedData/alldata45USonly.txt"
 # PARSED_DATA_FULL_PATH = "../parsedData/shortalldata.txt"
 FUNCTION_WORDS_FILE = "../parsedData/functionWords.txt"
 RANDOMIZE_DATA = False  # will alter the train-test samples
@@ -29,7 +27,7 @@ CLASS_NATIVE_VALUE = 1
 CLASS_NON_NATIVE_VALUE = -1
 TRAIN_TEST_SPLIT = 0.8
 
-FUNC_WORDS = False
+FUNC_WORDS = True
 TOP_WORDS = True
 NUM_OF_TOP_WORDS = 230
 
@@ -77,7 +75,7 @@ def maybe_parse_data():
 
         base_path = RAW_DATA_PATH + TOFEL_DIR
         non_native_file_names = os.listdir(base_path)
-        non_native_data = parse_class(CLASS_NON_NATIVE_LABEL, base_path, non_native_file_names, 1000000)
+        non_native_data = parse_class(CLASS_NON_NATIVE_LABEL, base_path, non_native_file_names, 11044)
 
         base_path = RAW_DATA_PATH + REDDIT_DIR + NATIVE_RAW_FOLDER_NAME
         native_file_names = os.listdir(base_path)
