@@ -19,7 +19,8 @@ CLASS_NATIVE_LABEL = "native"
 CLASS_NON_NATIVE_LABEL = "non-native"
 MINIMUM_ROW_LENGTH = 45
 
-PARSED_DATA_FULL_PATH = "../parsedData/alldata.txt"
+PARSED_DATA_FULL_PATH = "../parsedData/alldata45.txt"
+# PARSED_DATA_FULL_PATH = "../parsedData/shortalldata.txt"
 FUNCTION_WORDS_FILE = "../parsedData/functionWords.txt"
 RANDOMIZE_DATA = False  # will alter the train-test samples
 CLASS_NATIVE_VALUE = 1
@@ -30,10 +31,9 @@ FUNC_WORDS = True
 TOP_WORDS = True
 NUM_OF_TOP_WORDS = 230
 
-RUN_SVM_K_FOLD = True
-K = 3
-RUN_DEC_TREE = True
-RUN_NB = True
+RUN_SVM = True
+RUN_DEC_TREE = False
+RUN_NB = False
 
 
 def read_raw_file_to_list(file, max_rows, label):
@@ -391,9 +391,8 @@ def main():
         train_x_svm_rdy, train_y_svm_rdy, test_x_svm_rdy, test_y_svm_rdy = read_parsed_data(all_rows, func_words)
         print("-----------FUNC_WORDS_START---------------------------")
 
-        if RUN_SVM_K_FOLD:
-            # for j in range(3, K):
-            run_svm_with_k_fold(train_x_svm_rdy + test_x_svm_rdy, train_y_svm_rdy + test_y_svm_rdy, K)
+        if RUN_SVM:
+            run_svm(train_x_svm_rdy, train_y_svm_rdy, test_x_svm_rdy, test_y_svm_rdy)
 
         if RUN_DEC_TREE:
             run_dec_tree(train_x_svm_rdy, train_y_svm_rdy, test_x_svm_rdy, test_y_svm_rdy)
@@ -410,9 +409,8 @@ def main():
         train_x_svm_rdy, train_y_svm_rdy, test_x_svm_rdy, test_y_svm_rdy = read_parsed_data(all_rows, top_words_list)
         print("------------------TOP_WORDS_START--------------------")
 
-        if RUN_SVM_K_FOLD:
-            # for j in range(3, K):
-            run_svm_with_k_fold(train_x_svm_rdy + test_x_svm_rdy, train_y_svm_rdy + test_y_svm_rdy, K)
+        if RUN_SVM:
+            run_nb(train_x_svm_rdy, train_y_svm_rdy, test_x_svm_rdy, test_y_svm_rdy)
 
         if RUN_DEC_TREE:
             run_dec_tree(train_x_svm_rdy, train_y_svm_rdy, test_x_svm_rdy, test_y_svm_rdy)

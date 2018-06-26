@@ -3,8 +3,8 @@ from main import read_parsed_data
 import numpy as np
 import matplotlib.pyplot as plt
 
-PARSED_DATA_FULL_PATH = "../parsedData/alldata.txt"
-# PARSED_DATA_FULL_PATH = "../parsedData/shortalldata.txt"
+# PARSED_DATA_FULL_PATH = "../parsedData/alldata.txt"
+PARSED_DATA_FULL_PATH = "../parsedData/shortalldata.txt"
 FUNCTION_WORDS_FILE = "../parsedData/functionWords.txt"
 RANDOMIZE_DATA = False  # will alter the train-test samples
 CLASS_NATIVE_VALUE = 1
