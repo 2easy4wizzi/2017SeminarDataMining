@@ -20,7 +20,7 @@ CLASS_NON_NATIVE_LABEL = "non-native"
 MINIMUM_ROW_LENGTH = 45
 
 PARSED_DATA_FULL_PATH = "../parsedData/alldata45.txt"
-PARSED_DATA_FULL_PATH = "../parsedData/shortalldata.txt"
+# PARSED_DATA_FULL_PATH = "../parsedData/shortalldata.txt"
 FUNCTION_WORDS_FILE = "../parsedData/functionWords.txt"
 RANDOMIZE_DATA = False  # will alter the train-test samples
 CLASS_NATIVE_VALUE = 1
@@ -211,8 +211,9 @@ def read_parsed_data(all_rows, func_words):  # func_words could be just top x wo
     return train_x_svm_ready, train_y_svm_ready, test_x_svm_ready, test_y_svm_ready
 
 
-def run_svm(train_x_svm_ready, train_y_svm_ready, test_x_svm_ready, test_y_svm_ready):
-    print("Running SVM...")
+def run_svm(train_x_svm_ready, train_y_svm_ready, test_x_svm_ready, test_y_svm_ready, should_print=True):
+    if should_print:
+        print("Running SVM...")
     clf = SVC(cache_size=7000)
     clf.fit(train_x_svm_ready, train_y_svm_ready)
     # specs = clf.fit(train_x_svm_ready, train_y_svm_ready)
@@ -220,7 +221,7 @@ def run_svm(train_x_svm_ready, train_y_svm_ready, test_x_svm_ready, test_y_svm_r
     # print("  {}".format(specs))
     y_pred = clf.predict(test_x_svm_ready)
     # score = clf.score(test_x_svm_ready, test_y_svm_ready)
-    score, prec, recall, fscore_w = print_info_of_predict(test_y_svm_ready, y_pred, True)
+    score, prec, recall, fscore_w = print_info_of_predict(test_y_svm_ready, y_pred, should_print)
     return score, prec, recall, fscore_w
 
 
@@ -241,8 +242,9 @@ def run_svm_with_k_fold(data_x, data_y, k):
     return
 
 
-def run_dec_tree(train_x_svm_ready, train_y_svm_ready, test_x_svm_ready, test_y_svm_ready):
-    print("Running Decision Tree...")
+def run_dec_tree(train_x_svm_ready, train_y_svm_ready, test_x_svm_ready, test_y_svm_ready, should_print=True):
+    if should_print:
+        print("Running Decision Tree...")
     clf = DecisionTreeClassifier(random_state=0)
     clf.fit(train_x_svm_ready, train_y_svm_ready)
     # specs = clf.fit(train_x_svm_ready, train_y_svm_ready)
@@ -250,12 +252,13 @@ def run_dec_tree(train_x_svm_ready, train_y_svm_ready, test_x_svm_ready, test_y_
     # print("  {}".format(specs))
     y_pred = clf.predict(test_x_svm_ready)
     # score = clf.score(test_x_svm_ready, test_y_svm_ready)
-    score, prec, recall, fscore_w = print_info_of_predict(test_y_svm_ready, y_pred, True)
+    score, prec, recall, fscore_w = print_info_of_predict(test_y_svm_ready, y_pred, should_print)
     return score, prec, recall, fscore_w
 
 
-def run_nb(train_x_svm_ready, train_y_svm_ready, test_x_svm_ready, test_y_svm_ready):
-    print("Running NB...")
+def run_nb(train_x_svm_ready, train_y_svm_ready, test_x_svm_ready, test_y_svm_ready, should_print=True):
+    if should_print:
+        print("Running NB...")
     clf = MultinomialNB()
     clf.fit(train_x_svm_ready, train_y_svm_ready)
     # specs = clf.fit(train_x_svm_ready, train_y_svm_ready)
@@ -263,7 +266,7 @@ def run_nb(train_x_svm_ready, train_y_svm_ready, test_x_svm_ready, test_y_svm_re
     # print("  {}".format(specs))
     y_pred = clf.predict(test_x_svm_ready)
     # score = clf.score(test_x_svm_ready, test_y_svm_ready)
-    score, prec, recall, fscore_w = print_info_of_predict(test_y_svm_ready, y_pred, True)
+    score, prec, recall, fscore_w = print_info_of_predict(test_y_svm_ready, y_pred, should_print)
     return score, prec, recall, fscore_w
 
 
