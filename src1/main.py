@@ -19,7 +19,7 @@ CLASS_NATIVE_LABEL = "native"
 CLASS_NON_NATIVE_LABEL = "non-native"
 MINIMUM_ROW_LENGTH = 45
 
-PARSED_DATA_FULL_PATH = "../parsedData/alldata45USonly.txt"
+PARSED_DATA_FULL_PATH = "../parsedData/alldata45.txt"
 # PARSED_DATA_FULL_PATH = "../parsedData/shortalldata.txt"
 FUNCTION_WORDS_FILE = "../parsedData/functionWords.txt"
 RANDOMIZE_DATA = False  # will alter the train-test samples
