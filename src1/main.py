@@ -32,8 +32,8 @@ TOP_WORDS = True
 NUM_OF_TOP_WORDS = 230
 
 RUN_SVM = True
-RUN_DEC_TREE = False
-RUN_NB = False
+RUN_DEC_TREE = True
+RUN_NB = True
 
 
 def read_raw_file_to_list(file, max_rows, label):
@@ -425,9 +425,4 @@ if __name__ == "__main__":
     start_time = time()
     main()
     output_all_args(time() - start_time)
-
-
-
-
-
 

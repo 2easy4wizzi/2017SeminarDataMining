@@ -1,10 +1,11 @@
 from main import read_file_to_list
 from main import read_parsed_data
+from main import run_svm
 import numpy as np
 import matplotlib.pyplot as plt
 
-# PARSED_DATA_FULL_PATH = "../parsedData/alldata.txt"
-PARSED_DATA_FULL_PATH = "../parsedData/shortalldata.txt"
+PARSED_DATA_FULL_PATH = "../parsedData/alldata45.txt"
+# PARSED_DATA_FULL_PATH = "../parsedData/shortalldata.txt"
 FUNCTION_WORDS_FILE = "../parsedData/functionWords.txt"
 RANDOMIZE_DATA = False  # will alter the train-test samples
 CLASS_NATIVE_VALUE = 1
@@ -85,6 +86,35 @@ def calc_mse_from_avg(name, super_vec):
     return
 
 
+def fix_test_size_and_change_train_size(data_x, data_y, test_fixed_size, train_size_start):
+    split_index = len(data_x) - test_fixed_size
+
+    test_x_fixed = data_x[split_index:]
+    test_y_fixed = data_y[split_index:]
+
+    remaining_data_x = data_x[:split_index]
+    remaining_data_y = data_y[:split_index]
+
+    print(len(data_x))
+    print(len(remaining_data_x))
+    print(len(test_x_fixed))
+
+    print("Test data size is fixed to {}".format(len(test_y_fixed)))
+    train_size = train_size_start
+    i = 1
+    while train_size < len(remaining_data_y):
+        train_x = remaining_data_x[:train_size]
+        train_y = remaining_data_y[:train_size]
+        print("Attempt {}: Train data size set to {}".format(i, len(train_y)))
+        run_svm(train_x, train_y, test_x_fixed, test_y_fixed)
+        train_size += 1500
+        i += 1
+    train_x = remaining_data_x[:]
+    train_y = remaining_data_y[:]
+    print("Attempt {}: Train data size set to {}".format(i, len(train_y)))
+    run_svm(train_x, train_y, test_x_fixed, test_y_fixed)
+
+
 def main():
     func_words = read_file_to_list(FUNCTION_WORDS_FILE, -1)
     all_rows = read_file_to_list(PARSED_DATA_FULL_PATH, -1)
@@ -92,18 +122,20 @@ def main():
     data_x = train_x_svm_rdy + test_x_svm_rdy
     data_y = train_y_svm_rdy + test_y_svm_rdy
 
-    data_x_nat, data_x_non = split_all_data_to_classes(data_x, data_y)
+    # data_x_nat, data_x_non = split_all_data_to_classes(data_x, data_y)
+    #
+    # nat_super_vec = make_super_vec(len(func_words), data_x_nat)
+    # non_super_vec = make_super_vec(len(func_words), data_x_non)
+    #
+    # print_top_x_f_words("Native:", nat_super_vec, func_words)
+    # print_top_x_f_words("NON-Native:", non_super_vec, func_words)
+    #
+    # # show2bar_charts(nat_super_vec,non_super_vec)
+    # print("\nMSE from count average:")
+    # calc_mse_from_avg("Native", nat_super_vec)
+    # calc_mse_from_avg("NON-Native", non_super_vec)
 
-    nat_super_vec = make_super_vec(len(func_words), data_x_nat)
-    non_super_vec = make_super_vec(len(func_words), data_x_non)
-
-    print_top_x_f_words("Native:", nat_super_vec, func_words)
-    print_top_x_f_words("NON-Native:", non_super_vec, func_words)
-
-    # show2bar_charts(nat_super_vec,non_super_vec)
-    print("\nMSE from count average:")
-    calc_mse_from_avg("Native", nat_super_vec)
-    calc_mse_from_avg("NON-Native", non_super_vec)
+    fix_test_size_and_change_train_size(data_x, data_y, 1000, 2000)
 
     return
 
