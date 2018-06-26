@@ -20,7 +20,7 @@ CLASS_NON_NATIVE_LABEL = "non-native"
 MINIMUM_ROW_LENGTH = 45
 
 PARSED_DATA_FULL_PATH = "../parsedData/alldata45.txt"
-# PARSED_DATA_FULL_PATH = "../parsedData/shortalldata.txt"
+PARSED_DATA_FULL_PATH = "../parsedData/shortalldata.txt"
 FUNCTION_WORDS_FILE = "../parsedData/functionWords.txt"
 RANDOMIZE_DATA = False  # will alter the train-test samples
 CLASS_NATIVE_VALUE = 1
@@ -220,8 +220,8 @@ def run_svm(train_x_svm_ready, train_y_svm_ready, test_x_svm_ready, test_y_svm_r
     # print("  {}".format(specs))
     y_pred = clf.predict(test_x_svm_ready)
     # score = clf.score(test_x_svm_ready, test_y_svm_ready)
-    score = print_info_of_predict(test_y_svm_ready, y_pred)
-    return score
+    score, prec, recall, fscore_w = print_info_of_predict(test_y_svm_ready, y_pred, True)
+    return score, prec, recall, fscore_w
 
 
 def run_svm_with_k_fold(data_x, data_y, k):
@@ -250,8 +250,8 @@ def run_dec_tree(train_x_svm_ready, train_y_svm_ready, test_x_svm_ready, test_y_
     # print("  {}".format(specs))
     y_pred = clf.predict(test_x_svm_ready)
     # score = clf.score(test_x_svm_ready, test_y_svm_ready)
-    print_info_of_predict(test_y_svm_ready, y_pred)
-    return
+    score, prec, recall, fscore_w = print_info_of_predict(test_y_svm_ready, y_pred, True)
+    return score, prec, recall, fscore_w
 
 
 def run_nb(train_x_svm_ready, train_y_svm_ready, test_x_svm_ready, test_y_svm_ready):
@@ -263,11 +263,11 @@ def run_nb(train_x_svm_ready, train_y_svm_ready, test_x_svm_ready, test_y_svm_re
     # print("  {}".format(specs))
     y_pred = clf.predict(test_x_svm_ready)
     # score = clf.score(test_x_svm_ready, test_y_svm_ready)
-    print_info_of_predict(test_y_svm_ready, y_pred)
-    return
+    score, prec, recall, fscore_w = print_info_of_predict(test_y_svm_ready, y_pred, True)
+    return score, prec, recall, fscore_w
 
 
-def print_info_of_predict(test_y_svm_ready, y_pred):
+def print_info_of_predict(test_y_svm_ready, y_pred, should_print):
     n = len(y_pred)
     good = 0
     num_non_nat = 0
@@ -281,14 +281,15 @@ def print_info_of_predict(test_y_svm_ready, y_pred):
     c_nat = CLASS_NATIVE_VALUE
 
     prec, recall, fscore, _ = precision_recall_fscore_support(test_y_svm_ready, y_pred, labels=[c_non, c_nat])
-    print("          " + CLASS_NON_NATIVE_LABEL + "  " + CLASS_NATIVE_LABEL)
-    print("precision{} - tp/(tp+fp) ".format(prec))  # from all positives - how much did you catch
-    print("recall   {} - tp/(tp+fn) ".format(recall))  # from predicted positive - how many are really positive
-    print("fscore   {} - harmonicAvg(prec + recall) ".format(fscore))
     fscore_w = (fscore[0]*(num_non_nat/n) + fscore[1]*(1 - num_non_nat/n))
-    print("fscore weighted ={} - (fscore1*realPortion+fscore2*realPortion)".format(fscore_w))
-    print("Total accuracy  ={}%".format(score * 100))
-    return score
+    if should_print:
+        print("          " + CLASS_NON_NATIVE_LABEL + "  " + CLASS_NATIVE_LABEL)
+        print("precision{} - tp/(tp+fp) ".format(prec))  # from all positives - how much did you catch
+        print("recall   {} - tp/(tp+fn) ".format(recall))  # from predicted positive - how many are really positive
+        print("fscore   {} - harmonicAvg(prec + recall) ".format(fscore))
+        print("fscore weighted ={} - (fscore1*realPortion+fscore2*realPortion)".format(fscore_w))
+        print("Total accuracy  ={}%".format(score * 100))
+    return score, prec, recall, fscore_w
 
 # def run_example():
 #     print("Running SVM toy example...")
