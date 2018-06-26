@@ -18,8 +18,10 @@ NATIVE_RAW_FOLDER_NAME = "native/"
 CLASS_NATIVE_LABEL = "native"
 CLASS_NON_NATIVE_LABEL = "non-native"
 MINIMUM_ROW_LENGTH = 45
+MINIMUM_ROW_LENGTH = 10
+# MINIMUM_ROW_LENGTH = 25
 
-PARSED_DATA_FULL_PATH = "../parsedData/alldata45.txt"
+PARSED_DATA_FULL_PATH = "../parsedData/alldata10.txt"
 # PARSED_DATA_FULL_PATH = "../parsedData/shortalldata.txt"
 FUNCTION_WORDS_FILE = "../parsedData/functionWords.txt"
 RANDOMIZE_DATA = False  # will alter the train-test samples
@@ -27,7 +29,7 @@ CLASS_NATIVE_VALUE = 1
 CLASS_NON_NATIVE_VALUE = -1
 TRAIN_TEST_SPLIT = 0.8
 
-FUNC_WORDS = True
+FUNC_WORDS = False
 TOP_WORDS = True
 NUM_OF_TOP_WORDS = 230
 
@@ -414,7 +416,7 @@ def main():
         print("------------------TOP_WORDS_START--------------------")
 
         if RUN_SVM:
-            run_nb(train_x_svm_rdy, train_y_svm_rdy, test_x_svm_rdy, test_y_svm_rdy)
+            run_svm(train_x_svm_rdy, train_y_svm_rdy, test_x_svm_rdy, test_y_svm_rdy)
 
         if RUN_DEC_TREE:
             run_dec_tree(train_x_svm_rdy, train_y_svm_rdy, test_x_svm_rdy, test_y_svm_rdy)
